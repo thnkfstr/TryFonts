@@ -4,7 +4,6 @@ using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using TryFonts.App.ViewModels;
-using TryFonts.Core.Models;
 
 namespace TryFonts.App;
 
@@ -12,10 +11,13 @@ public partial class MainWindow : Window
 {
     private ListBox? _fontListBox;
 
-    // Scroll-preservation state captured just before a font-size change
-    private string _topFamilyBeforeResize  = string.Empty;
-    private double _scrollOffsetBeforeResize;
-    private double _fontSizeBeforeResize;
+    // Scroll-anchoring state captured just before a font-size change.
+    // The anchor is the topmost visible row, identified by ITEM INDEX (stable
+    // across a resize, unlike pixel offsets or realized containers).
+    private int    _anchorIndex = -1;
+    private double _anchorFraction;        // how far the anchor row was scrolled past the top, 0..1
+    private int    _restoreGeneration;     // invalidates an in-flight restore when a new resize arrives
+    private bool   _restoreInProgress;
 
     public MainWindow()
     {
@@ -35,7 +37,7 @@ public partial class MainWindow : Window
             vm.PropertyChanging += (_, args) =>
             {
                 if (args.PropertyName == nameof(MainWindowViewModel.FontSize))
-                    CaptureTopFamily();
+                    CaptureAnchor();
             };
 
             // After FontSize changes, restore the top-visible item exactly.
@@ -48,105 +50,119 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Captures scroll state before a font-size change while layout is still intact:
-    /// the family name of the top-visible row, the raw scroll offset, and the current
-    /// font size. All three are needed by RestoreScrollAsync.
+    /// Captures the anchor just before a font-size change, while layout is still intact:
+    /// the ITEM INDEX of the topmost visible row, plus how far that row was scrolled
+    /// past the viewport top (as a fraction of its height, so it survives the resize).
+    ///
+    /// Realized containers are scanned by actual viewport position (TranslatePoint),
+    /// not collection order — with virtualization, panel.Children order is realization
+    /// order and does not match visual order.
+    ///
+    /// If a restore is already in flight (held repeat button), the existing anchor is
+    /// kept: the viewport is mid-correction and re-capturing would anchor to the wrong row.
     /// </summary>
-    private void CaptureTopFamily()
+    private void CaptureAnchor()
     {
-        _topFamilyBeforeResize   = string.Empty;
-        _scrollOffsetBeforeResize = 0;
-        _fontSizeBeforeResize    = 0;
+        if (_restoreInProgress) return;
+
+        _anchorIndex    = -1;
+        _anchorFraction = 0;
 
         var scrollViewer = _fontListBox?.FindDescendantOfType<ScrollViewer>();
-        var panel        = _fontListBox?.FindDescendantOfType<VirtualizingStackPanel>();
-        if (scrollViewer is null || panel is null) return;
+        if (_fontListBox is null || scrollViewer is null) return;
 
-        // Record offset and font size BEFORE the change (PropertyChanging fires first)
-        _scrollOffsetBeforeResize = scrollViewer.Offset.Y;
-        if (DataContext is MainWindowViewModel vm)
-            _fontSizeBeforeResize = vm.FontSize; // still the old value here
+        Control? topmost  = null;
+        var      topmostY = double.MaxValue;
 
-        var offsetY = scrollViewer.Offset.Y;
-        foreach (var child in panel.Children)
+        foreach (var container in _fontListBox.GetRealizedContainers())
         {
-            if (child is Control ctrl &&
-                ctrl.Bounds.Bottom > offsetY &&
-                ctrl.DataContext is FontFamilyInfo info)
+            var pt = container.TranslatePoint(new Point(0, 0), scrollViewer);
+            if (!pt.HasValue) continue;
+
+            var top    = pt.Value.Y;
+            var bottom = top + container.Bounds.Height;
+
+            if (bottom <= 0.5) continue;            // fully above the viewport
+            if (top < topmostY)
             {
-                _topFamilyBeforeResize = info.FamilyName;
-                return;
+                topmostY = top;
+                topmost  = container;
             }
         }
+
+        if (topmost is null) return;
+
+        _anchorIndex = _fontListBox.IndexFromContainer(topmost);
+        if (topmostY < 0 && topmost.Bounds.Height > 0)
+            _anchorFraction = Math.Min(1, -topmostY / topmost.Bounds.Height);
     }
 
     /// <summary>
-    /// Two-path scroll restoration — no ScrollIntoView calls.
+    /// Pins the anchor row back to the viewport top after the font-size layout pass.
     ///
-    /// ScrollIntoView uses VirtualizingStackPanel's average-height estimate to locate
-    /// unrealized items, which can be badly wrong and is the root cause of random jumps.
-    /// This method avoids it entirely.
+    /// Pixel-offset math cannot work here: row heights do not scale linearly with font
+    /// size (fixed padding, fixed-size meta column, text wrapping changes line counts),
+    /// and the panel's extent is an estimate while items are unrealized. Instead this
+    /// converges iteratively: realize the anchor row (ScrollIntoView), measure its exact
+    /// viewport position (TranslatePoint), correct the offset, repeat. Each correction
+    /// realizes rows nearer the target, so the estimate error shrinks every pass;
+    /// it typically settles in 1–2 iterations, 8 is a safety cap.
     ///
-    /// Primary path: after one Background-priority yield (layout settled), scan the
-    /// realized children.  If the target is still in the viewport (common for small
-    /// increments), TranslatePoint gives its exact position and we pin it to the top.
-    ///
-    /// Fallback path: item heights scale linearly with font size, so the scroll offset
-    /// should scale by the same ratio.  newOffset = capturedOffset × (newSize / oldSize).
-    /// Deterministic, no estimation, no random behavior.
+    /// A generation counter abandons this restore if another font-size change arrives
+    /// (held repeat button) — the newest restore wins, reusing the same anchor.
     /// </summary>
     private async Task RestoreScrollAsync()
     {
-        if (_fontListBox is null) return;
-
-        var vm = DataContext as MainWindowViewModel;
-        if (vm is null) return;
-
-        // Snapshot and clear captured state
-        var targetName     = _topFamilyBeforeResize;
-        var capturedOffset = _scrollOffsetBeforeResize;
-        var capturedSize   = _fontSizeBeforeResize;
-        _topFamilyBeforeResize = string.Empty;
+        if (_fontListBox is null || _anchorIndex < 0) return;
 
         var scrollViewer = _fontListBox.FindDescendantOfType<ScrollViewer>();
-        var panel        = _fontListBox.FindDescendantOfType<VirtualizingStackPanel>();
-        if (scrollViewer is null || panel is null) return;
+        if (scrollViewer is null) return;
 
-        // Wait for the font-size layout pass to complete
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        var generation = ++_restoreGeneration;
+        var index      = _anchorIndex;
+        var fraction   = _anchorFraction;
 
-        // ── Primary: exact pin via TranslatePoint ────────────────────────────────
-        if (!string.IsNullOrEmpty(targetName))
+        _restoreInProgress = true;
+        try
         {
-            foreach (var child in panel.Children)
+            for (var attempt = 0; attempt < 8; attempt++)
             {
-                if (child is not Control ctrl) continue;
-                if (ctrl.DataContext is not FontFamilyInfo info) continue;
-                if (info.FamilyName != targetName) continue;
+                // Let the pending layout pass (font-size change or our last offset
+                // correction) complete before measuring.
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+                if (generation != _restoreGeneration) return; // superseded by a newer resize
 
-                // viewport-space Y of the item's top edge (0 = viewport top)
-                var pt = ctrl.TranslatePoint(new Point(0, 0), scrollViewer);
-                if (pt.HasValue)
+                var container = _fontListBox.ContainerFromIndex(index);
+                if (container is null)
                 {
-                    var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
-                    scrollViewer.Offset = new Vector(
-                        scrollViewer.Offset.X,
-                        Math.Clamp(scrollViewer.Offset.Y + pt.Value.Y, 0, maxY));
-                    return;
+                    // Anchor row not realized — bring it into the realized window and retry.
+                    _fontListBox.ScrollIntoView(index);
+                    continue;
                 }
+
+                var pt = container.TranslatePoint(new Point(0, 0), scrollViewer);
+                if (!pt.HasValue)
+                {
+                    _fontListBox.ScrollIntoView(index);
+                    continue;
+                }
+
+                // Target viewport-space Y of the row's top edge: scrolled past the top
+                // by the same fraction of its (new) height as before the resize.
+                var desiredTop = -fraction * container.Bounds.Height;
+                var error      = pt.Value.Y - desiredTop;
+                if (Math.Abs(error) < 0.5) return;   // pinned
+
+                var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+                scrollViewer.Offset = new Vector(
+                    scrollViewer.Offset.X,
+                    Math.Clamp(scrollViewer.Offset.Y + error, 0, maxY));
             }
         }
-
-        // ── Fallback: proportional scaling ───────────────────────────────────────
-        // Item not realized in the current viewport. All item heights scale with font size,
-        // so the scroll offset should scale by the same factor.
-        // Computed entirely from pre-change captures — no post-change estimation needed.
-        if (capturedSize > 0)
+        finally
         {
-            var scale = vm.FontSize / capturedSize;
-            var newY  = capturedOffset * scale;
-            var maxY  = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
-            scrollViewer.Offset = new Vector(scrollViewer.Offset.X, Math.Clamp(newY, 0, maxY));
+            if (generation == _restoreGeneration)
+                _restoreInProgress = false;
         }
     }
 
