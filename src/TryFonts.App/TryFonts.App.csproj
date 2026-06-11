@@ -41,6 +41,12 @@
          SkiaSharp is a transitive dependency of Avalonia; we reference it explicitly
          to call SKFontManager directly. -->
     <PackageReference Include="SkiaSharp" Version="2.88.9" />
+
+    <!-- Pin Tmds.DBus.Protocol to the patched version (GHSA-xrw6-gwf8-vvr9).
+         Avalonia pulls this in transitively for Linux D-Bus support; 0.20.0 is
+         vulnerable to signal spoofing and resource exhaustion by malicious D-Bus peers.
+         Pinning here overrides the transitive version on all platforms. -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
   </ItemGroup>
 
   <ItemGroup>
