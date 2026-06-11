@@ -14,7 +14,7 @@ permissions:
 
 env:
   APP_PROJECT: src/TryFonts.App/TryFonts.App.csproj
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: '10.0.x'
 
 jobs:
   # ── Windows portable EXE ────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ public partial class MainWindow : Window
         // / or Ctrl+F → focus search box
         KeyDown += (_, e) =>
         {
-            if (e.Key == Key.Slash && e.KeyModifiers == KeyModifiers.None)
+            if (e.Key == Key.OemQuestion && e.KeyModifiers == KeyModifiers.None)
             {
                 FocusControl("SearchBox");
                 e.Handled = true;

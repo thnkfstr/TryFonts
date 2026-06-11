@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (or later LTS)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (or later LTS)
 - Git
 - Windows or macOS (Linux is not a supported target but the Core library and tests build there)
 

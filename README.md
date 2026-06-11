@@ -41,7 +41,7 @@ Signing hooks are built into the release pipeline and will be enabled once certi
 
 ## Build from source
 
-Requirements: [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later.
+Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later.
 
 ```sh
 # Clone

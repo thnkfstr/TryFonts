@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -24,6 +24,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TryFonts.Core\TryFonts.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Make Xunit attributes available without explicit using in every test file -->
+    <Using Include="Xunit" />
   </ItemGroup>
 
 </Project>
