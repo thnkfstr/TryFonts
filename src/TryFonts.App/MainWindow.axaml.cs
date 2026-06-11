@@ -168,6 +168,17 @@ public partial class MainWindow : Window
 
     private void SetupKeyboardShortcuts()
     {
+        // Platform command modifier: Cmd on macOS, Ctrl elsewhere.
+        var isMac = OperatingSystem.IsMacOS();
+        var cmd   = isMac ? KeyModifiers.Meta : KeyModifiers.Control;
+
+        // Keep tooltips truthful per platform (XAML defaults say "Ctrl+…")
+        if (this.FindControl<TextBox>("PreviewTextBox") is { } previewBox)
+            ToolTip.SetTip(previewBox, isMac ? "⌘L to focus" : "Ctrl+L to focus");
+        if (this.FindControl<TextBox>("SearchBox") is { } searchBox)
+            ToolTip.SetTip(searchBox, isMac ? "/ or ⌘F to focus, Esc to clear"
+                                            : "/ or Ctrl+F to focus, Esc to clear");
+
         KeyDown += (_, e) =>
         {
             if (e.Key == Key.OemQuestion && e.KeyModifiers == KeyModifiers.None)
@@ -175,12 +186,12 @@ public partial class MainWindow : Window
                 FocusControl("SearchBox");
                 e.Handled = true;
             }
-            else if (e.Key == Key.F && e.KeyModifiers == KeyModifiers.Control)
+            else if (e.Key == Key.F && e.KeyModifiers == cmd)
             {
                 FocusControl("SearchBox");
                 e.Handled = true;
             }
-            else if (e.Key == Key.L && e.KeyModifiers == KeyModifiers.Control)
+            else if (e.Key == Key.L && e.KeyModifiers == cmd)
             {
                 FocusControl("PreviewTextBox");
                 e.Handled = true;

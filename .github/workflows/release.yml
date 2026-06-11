@@ -108,7 +108,11 @@ jobs:
           --output publish/osx-arm64
 
       - name: Bundle into .app
-        run: tools/bundle-macos-app.sh publish/osx-arm64/TryFonts osx-arm64
+        # bash prefix: the script's executable bit is not set in the git index.
+        # VERSION env: bundle-macos-app.sh embeds it in Info.plist (else 0.1.0).
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: bash tools/bundle-macos-app.sh publish/osx-arm64/TryFonts osx-arm64
 
       - name: Create DMG
         run: |
@@ -165,7 +169,11 @@ jobs:
           --output publish/osx-x64
 
       - name: Bundle into .app
-        run: tools/bundle-macos-app.sh publish/osx-x64/TryFonts osx-x64
+        # bash prefix: the script's executable bit is not set in the git index.
+        # VERSION env: bundle-macos-app.sh embeds it in Info.plist (else 0.1.0).
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: bash tools/bundle-macos-app.sh publish/osx-x64/TryFonts osx-x64
 
       - name: Create DMG
         run: |

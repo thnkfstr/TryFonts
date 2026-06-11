@@ -29,12 +29,15 @@ build_arch() {
     --self-contained true \
     -p:PublishSingleFile=true \
     -p:EnableCompressionInSingleFile=true \
+    -p:PublishTrimmed=true \
     -p:DebugType=embedded \
     -p:Version="$VERSION" \
     --output "$OUT"
 
   echo "==> Bundle .app ($RID)"
-  VERSION="$VERSION" "$ROOT/tools/bundle-macos-app.sh" "$OUT/TryFonts" "$RID"
+  # Invoke via bash: the script's executable bit is not set in the git index,
+  # so direct execution fails on a fresh checkout.
+  VERSION="$VERSION" bash "$ROOT/tools/bundle-macos-app.sh" "$OUT/TryFonts" "$RID"
 
   echo "==> Create DMG"
   hdiutil create \
