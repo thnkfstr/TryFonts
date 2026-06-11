@@ -54,6 +54,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Trimming roots: publish passes -p:PublishTrimmed=true (see tools/ and CI).
+         The XAML uses reflection bindings, which the trimmer cannot see, so our own
+         assemblies must be kept whole. Avalonia and the BCL are trim-annotated and
+         shrink safely. These items are inert when trimming is off, so dev builds
+         and tests are unaffected. -->
+    <TrimmerRootAssembly Include="TryFonts" />
+    <TrimmerRootAssembly Include="TryFonts.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- AXAML files must be AvaloniaResource so the XAML compiler processes them -->
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>

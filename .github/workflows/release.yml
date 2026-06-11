@@ -44,6 +44,7 @@ jobs:
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
           -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=true
           -p:DebugType=embedded
           -p:Version=${{ github.event.inputs.version }}
           --output publish/win-x64
@@ -101,6 +102,7 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=true
           -p:DebugType=embedded
           -p:Version=${{ github.event.inputs.version }}
           --output publish/osx-arm64
@@ -157,6 +159,7 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
+          -p:PublishTrimmed=true
           -p:DebugType=embedded
           -p:Version=${{ github.event.inputs.version }}
           --output publish/osx-x64

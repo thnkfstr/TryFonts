@@ -10,12 +10,8 @@ namespace TryFonts.App.Services;
 /// </summary>
 public sealed class JsonSettingsService : ISettingsService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
-    };
-
+    // Serialization options (indented, string enums, NaN support) live on
+    // SettingsJsonContext — source-generated for trim safety.
     private readonly string _settingsPath;
 
     public JsonSettingsService()
@@ -34,7 +30,7 @@ public sealed class JsonSettingsService : ISettingsService
             if (File.Exists(_settingsPath))
             {
                 var json = File.ReadAllText(_settingsPath);
-                var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
+                var settings = JsonSerializer.Deserialize(json, SettingsJsonContext.Default.AppSettings);
                 if (settings is not null)
                     return settings;
             }
@@ -55,7 +51,7 @@ public sealed class JsonSettingsService : ISettingsService
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
 
-            File.WriteAllText(_settingsPath, JsonSerializer.Serialize(settings, JsonOptions));
+            File.WriteAllText(_settingsPath, JsonSerializer.Serialize(settings, SettingsJsonContext.Default.AppSettings));
         }
         catch
         {

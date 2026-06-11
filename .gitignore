@@ -39,3 +39,6 @@ TryFonts-*.dmg
 
 # dotnet tool manifests
 .dotnet/
+
+# Temp
+*tmp*

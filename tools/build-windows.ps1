@@ -43,7 +43,7 @@ if (-not $SkipTests) {
     dotnet test $solution --no-build --configuration Release
 }
 
-Write-Host "==> Publish (win-x64, single-file, self-contained)" -ForegroundColor Cyan
+Write-Host "==> Publish (win-x64, single-file, self-contained, trimmed)" -ForegroundColor Cyan
 dotnet publish $project `
     --configuration Release `
     --runtime win-x64 `
@@ -51,6 +51,7 @@ dotnet publish $project `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:EnableCompressionInSingleFile=true `
+    -p:PublishTrimmed=true `
     -p:DebugType=embedded `
     -p:Version=$Version `
     --output $outDir
