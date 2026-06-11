@@ -7,6 +7,10 @@ Preview any text string across all fonts installed on your computer. Supports bo
 **License:** GPL-3.0 · **Author:** Ben Adams · **Platform:** Windows, macOS
 
 
+<a href="https://buymeacoffee.com/thnkfstr" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
+</a>
+
 
 ---
 
