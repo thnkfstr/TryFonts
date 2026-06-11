@@ -8,6 +8,29 @@
         Width="1200"
         Height="800">
 
+    <Window.Styles>
+
+        <!-- Compact B / I toggle buttons: narrow, centred glyph, no extra padding -->
+        <Style Selector="ToggleButton.icon-btn">
+            <Setter Property="Width"  Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment"   Value="Center"/>
+        </Style>
+
+        <!-- Small spinner buttons in the custom font-size stepper -->
+        <Style Selector="RepeatButton.spinner-btn">
+            <Setter Property="Padding"   Value="0"/>
+            <Setter Property="MinWidth"  Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment"   Value="Center"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+
+    </Window.Styles>
+
     <!-- Keyboard shortcuts are wired in MainWindow.axaml.cs -->
 
     <DockPanel LastChildFill="True">
@@ -19,15 +42,18 @@
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
             <StackPanel Orientation="Vertical" Spacing="6">
 
-                <!-- Row 1: Preview text — full width -->
+                <!-- Row 1: Preview text — full width, wraps to show all text -->
                 <TextBox x:Name="PreviewTextBox"
                          Text="{Binding PreviewText}"
                          Watermark="Type preview text…"
                          HorizontalAlignment="Stretch"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="False"
+                         MinHeight="32"
                          AutomationProperties.Name="Preview text"
                          ToolTip.Tip="Ctrl+L to focus" />
 
-                <!-- Row 2: All controls -->
+                <!-- Row 2: Controls -->
                 <WrapPanel Orientation="Horizontal">
 
                     <!-- Preset -->
@@ -47,24 +73,40 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <!-- Size -->
+                    <!-- Size: text box + stacked ▲/▼ spinner (standard NumericUpDown look) -->
                     <StackPanel Orientation="Vertical" Margin="0,0,8,0">
                         <TextBlock Text="Size" FontSize="11"
                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                    Margin="0,0,0,2" />
-                        <NumericUpDown Value="{Binding FontSize}"
-                                       Minimum="6"
-                                       Maximum="200"
-                                       Increment="2"
-                                       FormatString="0"
-                                       Width="110"
-                                       AutomationProperties.Name="Font size" />
+                        <StackPanel Orientation="Horizontal" Spacing="0">
+                            <TextBox Text="{Binding FontSizeText}"
+                                     Width="52"
+                                     Height="28"
+                                     TextAlignment="Center"
+                                     VerticalContentAlignment="Center"
+                                     AutomationProperties.Name="Font size" />
+                            <StackPanel Orientation="Vertical" Spacing="0" Margin="3,0,0,0">
+                                <RepeatButton Classes="spinner-btn"
+                                              Command="{Binding IncreaseFontSizeCommand}"
+                                              Content="▲"
+                                              Width="22" Height="14"
+                                              FontSize="9"
+                                              AutomationProperties.Name="Increase font size" />
+                                <RepeatButton Classes="spinner-btn"
+                                              Command="{Binding DecreaseFontSizeCommand}"
+                                              Content="▼"
+                                              Width="22" Height="14"
+                                              FontSize="9"
+                                              AutomationProperties.Name="Decrease font size" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- Bold -->
-                    <StackPanel Orientation="Vertical" Margin="0,0,4,0" VerticalAlignment="Bottom">
-                        <ToggleButton IsChecked="{Binding IsBold}"
-                                      Width="36" Height="28"
+                    <StackPanel Orientation="Vertical" Margin="0,0,4,0"
+                                VerticalAlignment="Bottom">
+                        <ToggleButton Classes="icon-btn"
+                                      IsChecked="{Binding IsBold}"
                                       FontWeight="Bold"
                                       Content="B"
                                       AutomationProperties.Name="Bold"
@@ -72,9 +114,10 @@
                     </StackPanel>
 
                     <!-- Italic -->
-                    <StackPanel Orientation="Vertical" Margin="0,0,14,0" VerticalAlignment="Bottom">
-                        <ToggleButton IsChecked="{Binding IsItalic}"
-                                      Width="36" Height="28"
+                    <StackPanel Orientation="Vertical" Margin="0,0,14,0"
+                                VerticalAlignment="Bottom">
+                        <ToggleButton Classes="icon-btn"
+                                      IsChecked="{Binding IsItalic}"
                                       FontStyle="Italic"
                                       Content="I"
                                       AutomationProperties.Name="Italic"
@@ -99,7 +142,7 @@
                     </StackPanel>
 
                     <!-- Match -->
-                    <StackPanel Orientation="Vertical" Margin="0,0,12,0">
+                    <StackPanel Orientation="Vertical" Margin="0,0,16,0">
                         <TextBlock Text="Match" FontSize="11"
                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                    Margin="0,0,0,2" />
@@ -107,17 +150,6 @@
                                   SelectedIndex="{Binding SearchModeIndex}"
                                   Width="120"
                                   AutomationProperties.Name="Search mode" />
-                    </StackPanel>
-
-                    <!-- Sort -->
-                    <StackPanel Orientation="Vertical" Margin="0,0,16,0">
-                        <TextBlock Text="Sort" FontSize="11"
-                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                   Margin="0,0,0,2" />
-                        <ComboBox ItemsSource="{Binding SortModeItems}"
-                                  SelectedIndex="{Binding SortModeIndex}"
-                                  Width="120"
-                                  AutomationProperties.Name="Sort order" />
                     </StackPanel>
 
                     <!-- Font count -->
@@ -143,7 +175,8 @@
         </Border>
 
         <!-- ══════════════════════════ FONT LIST ════════════════════════════ -->
-        <ListBox ItemsSource="{Binding FilteredFonts}"
+        <ListBox x:Name="FontListBox"
+                 ItemsSource="{Binding FilteredFonts}"
                  SelectionMode="Single"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  AutomationProperties.Name="Font list">
@@ -213,37 +246,28 @@
                                             Spacing="5"
                                             Margin="0,3,0,0">
 
-                                    <TextBlock Text="R"
-                                               FontSize="10"
-                                               FontFamily="Inter,Default"
+                                    <TextBlock Text="R" FontSize="10" FontFamily="Inter,Default"
                                                Opacity="{Binding AvailableStyles,
                                                         Converter={StaticResource StyleAvailabilityConverter},
                                                         ConverterParameter=Regular}"
                                                ToolTip.Tip="Regular" />
 
-                                    <TextBlock Text="B"
-                                               FontSize="10"
-                                               FontFamily="Inter,Default"
+                                    <TextBlock Text="B" FontSize="10" FontFamily="Inter,Default"
                                                FontWeight="Bold"
                                                Opacity="{Binding AvailableStyles,
                                                         Converter={StaticResource StyleAvailabilityConverter},
                                                         ConverterParameter=Bold}"
                                                ToolTip.Tip="Bold" />
 
-                                    <TextBlock Text="I"
-                                               FontSize="10"
-                                               FontFamily="Inter,Default"
+                                    <TextBlock Text="I" FontSize="10" FontFamily="Inter,Default"
                                                FontStyle="Italic"
                                                Opacity="{Binding AvailableStyles,
                                                         Converter={StaticResource StyleAvailabilityConverter},
                                                         ConverterParameter=Italic}"
                                                ToolTip.Tip="Italic" />
 
-                                    <TextBlock Text="BI"
-                                               FontSize="10"
-                                               FontFamily="Inter,Default"
-                                               FontWeight="Bold"
-                                               FontStyle="Italic"
+                                    <TextBlock Text="BI" FontSize="10" FontFamily="Inter,Default"
+                                               FontWeight="Bold" FontStyle="Italic"
                                                Opacity="{Binding AvailableStyles,
                                                         Converter={StaticResource StyleAvailabilityConverter},
                                                         ConverterParameter=BoldItalic}"

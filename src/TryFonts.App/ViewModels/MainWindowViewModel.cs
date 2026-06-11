@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TryFonts.Core.Models;
@@ -19,6 +18,9 @@ public partial class MainWindowViewModel : ObservableObject
     private List<FontFamilyInfo> _allFonts = [];
     private CancellationTokenSource _debounceCts = new();
 
+    // Guards against the FontSize ↔ FontSizeText circular update
+    private bool _updatingFontSize;
+
     // ── Observable properties ────────────────────────────────────────────────
 
     [ObservableProperty]
@@ -37,6 +39,13 @@ public partial class MainWindowViewModel : ObservableObject
 
     // Controls — persisted
     [ObservableProperty] private double _fontSize;
+
+    /// <summary>
+    /// String representation of <see cref="FontSize"/> for the custom stepper TextBox.
+    /// Kept in sync with <see cref="FontSize"/>; changes here parse back to <see cref="FontSize"/>.
+    /// </summary>
+    [ObservableProperty] private string _fontSizeText = "24";
+
     [ObservableProperty] private bool _isBold;
     [ObservableProperty] private bool _isItalic;
     [ObservableProperty] private SearchMode _searchMode;
@@ -53,9 +62,7 @@ public partial class MainWindowViewModel : ObservableObject
     public IReadOnlyList<PreviewTextPreset> Presets => PreviewTextPresets.All;
 
     public IReadOnlyList<string> SearchModeItems { get; } = ["Contains", "Starts with"];
-    public IReadOnlyList<string> SortModeItems   { get; } = ["Name A–Z", "Name Z–A"];
 
-    /// <summary>Index-based binding for ComboBox SelectedIndex.</summary>
     public int SearchModeIndex
     {
         get => (int)SearchMode;
@@ -64,19 +71,6 @@ public partial class MainWindowViewModel : ObservableObject
             if ((int)SearchMode != value)
             {
                 SearchMode = (SearchMode)value;
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    public int SortModeIndex
-    {
-        get => (int)SortMode;
-        set
-        {
-            if ((int)SortMode != value)
-            {
-                SortMode = (SortMode)value;
                 OnPropertyChanged();
             }
         }
@@ -98,11 +92,15 @@ public partial class MainWindowViewModel : ObservableObject
 
         // Restore persisted settings — but never restore preview text
         var s = _settingsService.Load();
-        _fontSize   = s.FontSize;
-        _isBold     = s.IsBold;
-        _isItalic   = s.IsItalic;
-        _searchMode = s.SearchMode;
-        _sortMode   = s.SortMode;
+        _fontSize      = s.FontSize;
+        _fontSizeText  = ((int)Math.Round(s.FontSize)).ToString();
+        _isBold        = s.IsBold;
+        _isItalic      = s.IsItalic;
+        _searchMode    = s.SearchMode;
+        _sortMode      = s.SortMode;
+
+        // Show the base-sample preset as active on startup
+        _selectedPreset = PreviewTextPresets.All[0];
 
         _ = LoadFontsAsync();
     }
@@ -117,7 +115,6 @@ public partial class MainWindowViewModel : ObservableObject
 
             if (_syntheticFontCount > 0)
             {
-                // Augment with synthetic entries; keep real names for rendering hints
                 var realNames = discovered.Select(f => f.FamilyName).ToList();
                 var synthetic = SyntheticFontDataGenerator.Generate(_syntheticFontCount, realNames);
                 _allFonts = [.. discovered, .. synthetic];
@@ -151,15 +148,36 @@ public partial class MainWindowViewModel : ObservableObject
         SaveSettings();
     }
 
-    partial void OnSortModeChanged(SortMode value)
+    partial void OnFontSizeChanged(double value)
     {
-        ApplyFilterAndSort();
+        // Sync the display text without re-triggering this method
+        if (!_updatingFontSize)
+        {
+            _updatingFontSize = true;
+            FontSizeText = ((int)Math.Round(value)).ToString();
+            _updatingFontSize = false;
+        }
         SaveSettings();
     }
 
-    partial void OnFontSizeChanged(double value)     => SaveSettings();
-    partial void OnIsBoldChanged(bool value)         => SaveSettings();
-    partial void OnIsItalicChanged(bool value)       => SaveSettings();
+    partial void OnFontSizeTextChanged(string value)
+    {
+        // Parse the user-typed value back to FontSize
+        if (!_updatingFontSize &&
+            int.TryParse(value.Trim(), out var size))
+        {
+            var clamped = (double)Math.Clamp(size, 6, 200);
+            if (Math.Abs(FontSize - clamped) > 0.001)
+            {
+                _updatingFontSize = true;
+                FontSize = clamped;
+                _updatingFontSize = false;
+            }
+        }
+    }
+
+    partial void OnIsBoldChanged(bool value)   => SaveSettings();
+    partial void OnIsItalicChanged(bool value) => SaveSettings();
 
     partial void OnSelectedPresetChanged(PreviewTextPreset? value)
     {
@@ -171,23 +189,21 @@ public partial class MainWindowViewModel : ObservableObject
 
     private async Task DebounceFilterAsync()
     {
-        // Cancel any pending debounce
         _debounceCts.Cancel();
         _debounceCts = new CancellationTokenSource();
         var token = _debounceCts.Token;
-
         try
         {
             await Task.Delay(150, token);
             ApplyFilterAndSort();
         }
-        catch (OperationCanceledException) { /* superseded by a newer keystroke */ }
+        catch (OperationCanceledException) { }
     }
 
     private void ApplyFilterAndSort()
     {
         var filtered = FontFilter.Apply(_allFonts, SearchText, SearchMode);
-        var sorted   = FontSorter.Apply(filtered, SortMode);
+        var sorted   = FontSorter.Apply(filtered, SortMode.NameAZ);
         FilteredFonts = sorted.ToList().AsReadOnly();
     }
 
@@ -197,7 +213,10 @@ public partial class MainWindowViewModel : ObservableObject
     private void ClearSearch() => SearchText = string.Empty;
 
     [RelayCommand]
-    private void ResetPreviewText() => PreviewText = PreviewTextPresets.BaseSampleText;
+    private void IncreaseFontSize() => FontSize = Math.Min(FontSize + 2, 200);
+
+    [RelayCommand]
+    private void DecreaseFontSize() => FontSize = Math.Max(FontSize - 2, 6);
 
     // ── Settings ──────────────────────────────────────────────────────────────
 
@@ -209,11 +228,10 @@ public partial class MainWindowViewModel : ObservableObject
             IsBold     = IsBold,
             IsItalic   = IsItalic,
             SearchMode = SearchMode,
-            SortMode   = SortMode,
+            SortMode   = SortMode.NameAZ,
         });
     }
 
-    /// <summary>Called by App.axaml.cs when the main window closes.</summary>
     public void SaveWindowGeometry(double width, double height, double x, double y)
     {
         var s = _settingsService.Load();
