@@ -1,6 +1,5 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:svc="using:TryFonts.Core.Services"
         x:Class="TryFonts.App.MainWindow"
         Title="Try Fonts"
         Icon="/Assets/TryFonts.ico"
@@ -15,132 +14,125 @@
 
         <!-- ══════════════════════════ TOOLBAR ══════════════════════════════ -->
         <Border DockPanel.Dock="Top"
-                Padding="10,8"
+                Padding="10,8,10,8"
                 BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
-            <WrapPanel Orientation="Horizontal">
+            <StackPanel Orientation="Vertical" Spacing="6">
 
-                <!-- Preview text -->
-                <StackPanel Orientation="Vertical" Margin="0,0,12,4">
-                    <TextBlock Text="Preview text" FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               Margin="0,0,0,2" />
-                    <TextBox x:Name="PreviewTextBox"
-                             Text="{Binding PreviewText}"
-                             Watermark="Type preview text…"
-                             Width="360"
-                             AutomationProperties.Name="Preview text"
-                             ToolTip.Tip="Ctrl+L to focus" />
-                </StackPanel>
+                <!-- Row 1: Preview text — full width -->
+                <TextBox x:Name="PreviewTextBox"
+                         Text="{Binding PreviewText}"
+                         Watermark="Type preview text…"
+                         HorizontalAlignment="Stretch"
+                         AutomationProperties.Name="Preview text"
+                         ToolTip.Tip="Ctrl+L to focus" />
 
-                <!-- Preset -->
-                <StackPanel Orientation="Vertical" Margin="0,0,12,4">
-                    <TextBlock Text="Preset" FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               Margin="0,0,0,2" />
-                    <ComboBox ItemsSource="{Binding Presets}"
-                              SelectedItem="{Binding SelectedPreset}"
-                              Width="160"
-                              AutomationProperties.Name="Preview text preset">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
+                <!-- Row 2: All controls -->
+                <WrapPanel Orientation="Horizontal">
 
-                <!-- Font size -->
-                <StackPanel Orientation="Vertical" Margin="0,0,12,4">
-                    <TextBlock Text="Size" FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               Margin="0,0,0,2" />
-                    <NumericUpDown Value="{Binding FontSize}"
-                                   Minimum="6"
-                                   Maximum="200"
-                                   Increment="2"
-                                   FormatString="0"
-                                   Width="90"
-                                   AutomationProperties.Name="Font size" />
-                </StackPanel>
+                    <!-- Preset -->
+                    <StackPanel Orientation="Vertical" Margin="0,0,12,0">
+                        <TextBlock Text="Preset" FontSize="11"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   Margin="0,0,0,2" />
+                        <ComboBox ItemsSource="{Binding Presets}"
+                                  SelectedItem="{Binding SelectedPreset}"
+                                  Width="160"
+                                  AutomationProperties.Name="Preview text preset">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
 
-                <!-- Bold -->
-                <StackPanel Orientation="Vertical" Margin="0,0,8,4" VerticalAlignment="Bottom">
-                    <TextBlock Text=" " FontSize="11" Margin="0,0,0,2" />
-                    <ToggleButton IsChecked="{Binding IsBold}"
-                                  Width="40" Height="32"
-                                  FontWeight="Bold"
-                                  Content="B"
-                                  AutomationProperties.Name="Bold"
-                                  ToolTip.Tip="Bold" />
-                </StackPanel>
+                    <!-- Size -->
+                    <StackPanel Orientation="Vertical" Margin="0,0,8,0">
+                        <TextBlock Text="Size" FontSize="11"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   Margin="0,0,0,2" />
+                        <NumericUpDown Value="{Binding FontSize}"
+                                       Minimum="6"
+                                       Maximum="200"
+                                       Increment="2"
+                                       FormatString="0"
+                                       Width="110"
+                                       AutomationProperties.Name="Font size" />
+                    </StackPanel>
 
-                <!-- Italic -->
-                <StackPanel Orientation="Vertical" Margin="0,0,16,4" VerticalAlignment="Bottom">
-                    <TextBlock Text=" " FontSize="11" Margin="0,0,0,2" />
-                    <ToggleButton IsChecked="{Binding IsItalic}"
-                                  Width="40" Height="32"
-                                  FontStyle="Italic"
-                                  Content="I"
-                                  AutomationProperties.Name="Italic"
-                                  ToolTip.Tip="Italic" />
-                </StackPanel>
+                    <!-- Bold -->
+                    <StackPanel Orientation="Vertical" Margin="0,0,4,0" VerticalAlignment="Bottom">
+                        <ToggleButton IsChecked="{Binding IsBold}"
+                                      Width="36" Height="28"
+                                      FontWeight="Bold"
+                                      Content="B"
+                                      AutomationProperties.Name="Bold"
+                                      ToolTip.Tip="Bold" />
+                    </StackPanel>
 
-                <!-- Search -->
-                <StackPanel Orientation="Vertical" Margin="0,0,8,4">
-                    <TextBlock Text="Search" FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               Margin="0,0,0,2" />
-                    <TextBox x:Name="SearchBox"
-                             Text="{Binding SearchText}"
-                             Watermark="Search fonts…"
-                             Width="200"
-                             AutomationProperties.Name="Search fonts"
-                             ToolTip.Tip="/ or Ctrl+F to focus, Esc to clear">
-                        <TextBox.KeyBindings>
-                            <KeyBinding Gesture="Escape" Command="{Binding ClearSearchCommand}" />
-                        </TextBox.KeyBindings>
-                    </TextBox>
-                </StackPanel>
+                    <!-- Italic -->
+                    <StackPanel Orientation="Vertical" Margin="0,0,14,0" VerticalAlignment="Bottom">
+                        <ToggleButton IsChecked="{Binding IsItalic}"
+                                      Width="36" Height="28"
+                                      FontStyle="Italic"
+                                      Content="I"
+                                      AutomationProperties.Name="Italic"
+                                      ToolTip.Tip="Italic" />
+                    </StackPanel>
 
-                <!-- Search mode -->
-                <StackPanel Orientation="Vertical" Margin="0,0,16,4">
-                    <TextBlock Text="Match" FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               Margin="0,0,0,2" />
-                    <ComboBox ItemsSource="{Binding SearchModeItems}"
-                              SelectedIndex="{Binding SearchModeIndex}"
-                              Width="110"
-                              AutomationProperties.Name="Search mode" />
-                </StackPanel>
+                    <!-- Search -->
+                    <StackPanel Orientation="Vertical" Margin="0,0,8,0">
+                        <TextBlock Text="Search" FontSize="11"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   Margin="0,0,0,2" />
+                        <TextBox x:Name="SearchBox"
+                                 Text="{Binding SearchText}"
+                                 Watermark="Search fonts…"
+                                 Width="200"
+                                 AutomationProperties.Name="Search fonts"
+                                 ToolTip.Tip="/ or Ctrl+F to focus, Esc to clear">
+                            <TextBox.KeyBindings>
+                                <KeyBinding Gesture="Escape" Command="{Binding ClearSearchCommand}" />
+                            </TextBox.KeyBindings>
+                        </TextBox>
+                    </StackPanel>
 
-                <!-- Sort -->
-                <StackPanel Orientation="Vertical" Margin="0,0,16,4">
-                    <TextBlock Text="Sort" FontSize="11"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               Margin="0,0,0,2" />
-                    <ComboBox ItemsSource="{Binding SortModeItems}"
-                              SelectedIndex="{Binding SortModeIndex}"
-                              Width="110"
-                              AutomationProperties.Name="Sort order" />
-                </StackPanel>
+                    <!-- Match -->
+                    <StackPanel Orientation="Vertical" Margin="0,0,12,0">
+                        <TextBlock Text="Match" FontSize="11"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   Margin="0,0,0,2" />
+                        <ComboBox ItemsSource="{Binding SearchModeItems}"
+                                  SelectedIndex="{Binding SearchModeIndex}"
+                                  Width="120"
+                                  AutomationProperties.Name="Search mode" />
+                    </StackPanel>
 
-                <!-- Font count -->
-                <StackPanel Orientation="Vertical" VerticalAlignment="Bottom" Margin="0,0,0,4">
-                    <TextBlock Text=" " FontSize="11" Margin="0,0,0,2" />
+                    <!-- Sort -->
+                    <StackPanel Orientation="Vertical" Margin="0,0,16,0">
+                        <TextBlock Text="Sort" FontSize="11"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   Margin="0,0,0,2" />
+                        <ComboBox ItemsSource="{Binding SortModeItems}"
+                                  SelectedIndex="{Binding SortModeIndex}"
+                                  Width="120"
+                                  AutomationProperties.Name="Sort order" />
+                    </StackPanel>
+
+                    <!-- Font count -->
                     <TextBlock Text="{Binding FontCountDisplay}"
                                FontSize="12"
-                               VerticalAlignment="Center"
+                               VerticalAlignment="Bottom"
                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                AutomationProperties.Name="Font count"
-                               Margin="0,6,0,0" />
-                </StackPanel>
+                               Margin="0,0,0,4" />
 
-            </WrapPanel>
+                </WrapPanel>
+            </StackPanel>
         </Border>
 
         <!-- ══════════════════════════ STATUS BAR ═══════════════════════════ -->
-        <!-- Visible while loading OR when there is an error message to show -->
         <Border DockPanel.Dock="Bottom"
                 Padding="10,4"
                 IsVisible="{Binding StatusMessage,
@@ -163,10 +155,10 @@
             </ListBox.ItemsPanel>
 
             <ListBox.Styles>
-                <!-- Remove the default selection/hover highlight so it reads like a browser -->
                 <Style Selector="ListBoxItem">
                     <Setter Property="Padding" Value="0" />
                     <Setter Property="Margin"  Value="0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 </Style>
                 <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
                     <Setter Property="Background" Value="{DynamicResource SystemListLowColor}" />
@@ -175,17 +167,18 @@
 
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Padding="12,7"
+                    <Border Padding="12,8"
                             BorderThickness="0,0,0,1"
                             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                         <Grid ColumnDefinitions="*,Auto">
 
-                            <!-- Preview text rendered in THIS font -->
+                            <!-- Preview text rendered in THIS font family -->
                             <TextBlock
                                 Grid.Column="0"
                                 Text="{Binding DataContext.PreviewText,
                                        RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                FontFamily="{Binding FamilyName}"
+                                FontFamily="{Binding FamilyName,
+                                            Converter={StaticResource StringToFontFamilyConverter}}"
                                 FontSize="{Binding DataContext.FontSize,
                                           RelativeSource={RelativeSource AncestorType=ListBox}}"
                                 FontWeight="{Binding DataContext.IsBold,
@@ -194,20 +187,18 @@
                                 FontStyle="{Binding DataContext.IsItalic,
                                            RelativeSource={RelativeSource AncestorType=ListBox},
                                            Converter={StaticResource BoolToFontStyleConverter}}"
-                                TextWrapping="NoWrap"
-                                TextTrimming="CharacterEllipsis"
-                                VerticalAlignment="Center"
+                                TextWrapping="Wrap"
+                                VerticalAlignment="Top"
+                                Margin="0,0,16,0"
                                 AutomationProperties.Name="{Binding FamilyName}" />
 
-                            <!-- Meta panel: family name + style indicators -->
+                            <!-- Meta: family name + style indicators -->
                             <StackPanel Grid.Column="1"
                                         Orientation="Vertical"
-                                        VerticalAlignment="Center"
+                                        VerticalAlignment="Top"
                                         HorizontalAlignment="Right"
-                                        Margin="16,0,0,0"
-                                        MinWidth="220">
+                                        MinWidth="200">
 
-                                <!-- Family name in UI font -->
                                 <TextBlock Text="{Binding FamilyName}"
                                            FontSize="13"
                                            FontFamily="Inter,Default"
@@ -216,7 +207,7 @@
                                            TextTrimming="CharacterEllipsis"
                                            HorizontalAlignment="Right" />
 
-                                <!-- Style availability chips -->
+                                <!-- Style chips -->
                                 <StackPanel Orientation="Horizontal"
                                             HorizontalAlignment="Right"
                                             Spacing="5"

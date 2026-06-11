@@ -10,9 +10,10 @@
 
     <Application.Resources>
         <ResourceDictionary>
-            <converters:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
-            <converters:BoolToFontStyleConverter  x:Key="BoolToFontStyleConverter" />
-            <converters:StyleAvailabilityConverter x:Key="StyleAvailabilityConverter" />
+            <converters:BoolToFontWeightConverter    x:Key="BoolToFontWeightConverter" />
+            <converters:BoolToFontStyleConverter     x:Key="BoolToFontStyleConverter" />
+            <converters:StyleAvailabilityConverter   x:Key="StyleAvailabilityConverter" />
+            <converters:StringToFontFamilyConverter  x:Key="StringToFontFamilyConverter" />
         </ResourceDictionary>
     </Application.Resources>
 
