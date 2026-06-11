@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <Authors>Ben Adams</Authors>
+    <Copyright>Copyright (c) Ben Adams</Copyright>
+    <Description>Platform-independent application logic for Try Fonts.</Description>
+  </PropertyGroup>
+
+</Project>

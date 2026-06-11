@@ -1,0 +1,273 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:svc="using:TryFonts.Core.Services"
+        x:Class="TryFonts.App.MainWindow"
+        Title="Try Fonts"
+        Icon="/Assets/TryFonts.ico"
+        MinWidth="640"
+        MinHeight="400"
+        Width="1200"
+        Height="800">
+
+    <!-- Keyboard shortcuts are wired in MainWindow.axaml.cs -->
+
+    <DockPanel LastChildFill="True">
+
+        <!-- ══════════════════════════ TOOLBAR ══════════════════════════════ -->
+        <Border DockPanel.Dock="Top"
+                Padding="10,8"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+            <WrapPanel Orientation="Horizontal" ItemWidth="Auto">
+
+                <!-- Preview text -->
+                <StackPanel Orientation="Vertical" Margin="0,0,12,4">
+                    <TextBlock Text="Preview text" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               Margin="0,0,0,2" />
+                    <TextBox x:Name="PreviewTextBox"
+                             Text="{Binding PreviewText}"
+                             Watermark="Type preview text…"
+                             Width="360"
+                             AutomationProperties.Name="Preview text"
+                             ToolTip.Tip="Ctrl+L to focus" />
+                </StackPanel>
+
+                <!-- Preset -->
+                <StackPanel Orientation="Vertical" Margin="0,0,12,4">
+                    <TextBlock Text="Preset" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               Margin="0,0,0,2" />
+                    <ComboBox ItemsSource="{Binding Presets}"
+                              SelectedItem="{Binding SelectedPreset}"
+                              Width="160"
+                              AutomationProperties.Name="Preview text preset">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Font size -->
+                <StackPanel Orientation="Vertical" Margin="0,0,12,4">
+                    <TextBlock Text="Size" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               Margin="0,0,0,2" />
+                    <NumericUpDown Value="{Binding FontSize}"
+                                   Minimum="6"
+                                   Maximum="200"
+                                   Increment="2"
+                                   FormatString="0"
+                                   Width="90"
+                                   AutomationProperties.Name="Font size" />
+                </StackPanel>
+
+                <!-- Bold -->
+                <StackPanel Orientation="Vertical" Margin="0,0,8,4" VerticalAlignment="Bottom">
+                    <TextBlock Text=" " FontSize="11" Margin="0,0,0,2" />
+                    <ToggleButton IsChecked="{Binding IsBold}"
+                                  Width="40" Height="32"
+                                  FontWeight="Bold"
+                                  Content="B"
+                                  AutomationProperties.Name="Bold"
+                                  ToolTip.Tip="Bold" />
+                </StackPanel>
+
+                <!-- Italic -->
+                <StackPanel Orientation="Vertical" Margin="0,0,16,4" VerticalAlignment="Bottom">
+                    <TextBlock Text=" " FontSize="11" Margin="0,0,0,2" />
+                    <ToggleButton IsChecked="{Binding IsItalic}"
+                                  Width="40" Height="32"
+                                  FontStyle="Italic"
+                                  Content="I"
+                                  AutomationProperties.Name="Italic"
+                                  ToolTip.Tip="Italic" />
+                </StackPanel>
+
+                <!-- Search -->
+                <StackPanel Orientation="Vertical" Margin="0,0,8,4">
+                    <TextBlock Text="Search" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               Margin="0,0,0,2" />
+                    <TextBox x:Name="SearchBox"
+                             Text="{Binding SearchText}"
+                             Watermark="Search fonts…"
+                             Width="200"
+                             AutomationProperties.Name="Search fonts"
+                             ToolTip.Tip="/ or Ctrl+F to focus, Esc to clear">
+                        <TextBox.KeyBindings>
+                            <KeyBinding Gesture="Escape" Command="{Binding ClearSearchCommand}" />
+                        </TextBox.KeyBindings>
+                    </TextBox>
+                </StackPanel>
+
+                <!-- Search mode -->
+                <StackPanel Orientation="Vertical" Margin="0,0,16,4">
+                    <TextBlock Text="Match" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               Margin="0,0,0,2" />
+                    <ComboBox ItemsSource="{Binding SearchModeItems}"
+                              SelectedIndex="{Binding SearchModeIndex}"
+                              Width="110"
+                              AutomationProperties.Name="Search mode" />
+                </StackPanel>
+
+                <!-- Sort -->
+                <StackPanel Orientation="Vertical" Margin="0,0,16,4">
+                    <TextBlock Text="Sort" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               Margin="0,0,0,2" />
+                    <ComboBox ItemsSource="{Binding SortModeItems}"
+                              SelectedIndex="{Binding SortModeIndex}"
+                              Width="110"
+                              AutomationProperties.Name="Sort order" />
+                </StackPanel>
+
+                <!-- Font count -->
+                <StackPanel Orientation="Vertical" VerticalAlignment="Bottom" Margin="0,0,0,4">
+                    <TextBlock Text=" " FontSize="11" Margin="0,0,0,2" />
+                    <TextBlock Text="{Binding FontCountDisplay}"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               AutomationProperties.Name="Font count"
+                               Margin="0,6,0,0" />
+                </StackPanel>
+
+            </WrapPanel>
+        </Border>
+
+        <!-- ══════════════════════════ STATUS BAR ═══════════════════════════ -->
+        <!-- Visible while loading OR when there is an error message to show -->
+        <Border DockPanel.Dock="Bottom"
+                Padding="10,4"
+                IsVisible="{Binding StatusMessage,
+                            Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="12"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </Border>
+
+        <!-- ══════════════════════════ FONT LIST ════════════════════════════ -->
+        <ListBox ItemsSource="{Binding FilteredFonts}"
+                 SelectionMode="Single"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 AutomationProperties.Name="Font list">
+
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+
+            <ListBox.Styles>
+                <!-- Remove the default selection/hover highlight so it reads like a browser -->
+                <Style Selector="ListBoxItem">
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin"  Value="0" />
+                </Style>
+                <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource SystemListLowColor}" />
+                </Style>
+            </ListBox.Styles>
+
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="12,7"
+                            BorderThickness="0,0,0,1"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                        <Grid ColumnDefinitions="*,Auto">
+
+                            <!-- Preview text rendered in THIS font -->
+                            <TextBlock
+                                Grid.Column="0"
+                                Text="{Binding DataContext.PreviewText,
+                                       RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                FontFamily="{Binding FamilyName}"
+                                FontSize="{Binding DataContext.FontSize,
+                                          RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                FontWeight="{Binding DataContext.IsBold,
+                                            RelativeSource={RelativeSource AncestorType=ListBox},
+                                            Converter={StaticResource BoolToFontWeightConverter}}"
+                                FontStyle="{Binding DataContext.IsItalic,
+                                           RelativeSource={RelativeSource AncestorType=ListBox},
+                                           Converter={StaticResource BoolToFontStyleConverter}}"
+                                TextWrapping="NoWrap"
+                                TextTrimming="CharacterEllipsis"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="{Binding FamilyName}" />
+
+                            <!-- Meta panel: family name + style indicators -->
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Vertical"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Right"
+                                        Margin="16,0,0,0"
+                                        MinWidth="220">
+
+                                <!-- Family name in UI font -->
+                                <TextBlock Text="{Binding FamilyName}"
+                                           FontSize="13"
+                                           FontFamily="Inter,Default"
+                                           FontWeight="Normal"
+                                           FontStyle="Normal"
+                                           TextTrimming="CharacterEllipsis"
+                                           HorizontalAlignment="Right" />
+
+                                <!-- Style availability chips -->
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Right"
+                                            Spacing="5"
+                                            Margin="0,3,0,0">
+
+                                    <TextBlock Text="R"
+                                               FontSize="10"
+                                               FontFamily="Inter,Default"
+                                               Opacity="{Binding AvailableStyles,
+                                                        Converter={StaticResource StyleAvailabilityConverter},
+                                                        ConverterParameter=Regular}"
+                                               ToolTip.Tip="Regular" />
+
+                                    <TextBlock Text="B"
+                                               FontSize="10"
+                                               FontFamily="Inter,Default"
+                                               FontWeight="Bold"
+                                               Opacity="{Binding AvailableStyles,
+                                                        Converter={StaticResource StyleAvailabilityConverter},
+                                                        ConverterParameter=Bold}"
+                                               ToolTip.Tip="Bold" />
+
+                                    <TextBlock Text="I"
+                                               FontSize="10"
+                                               FontFamily="Inter,Default"
+                                               FontStyle="Italic"
+                                               Opacity="{Binding AvailableStyles,
+                                                        Converter={StaticResource StyleAvailabilityConverter},
+                                                        ConverterParameter=Italic}"
+                                               ToolTip.Tip="Italic" />
+
+                                    <TextBlock Text="BI"
+                                               FontSize="10"
+                                               FontFamily="Inter,Default"
+                                               FontWeight="Bold"
+                                               FontStyle="Italic"
+                                               Opacity="{Binding AvailableStyles,
+                                                        Converter={StaticResource StyleAvailabilityConverter},
+                                                        ConverterParameter=BoldItalic}"
+                                               ToolTip.Tip="Bold Italic" />
+
+                                </StackPanel>
+                            </StackPanel>
+
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+
+        </ListBox>
+
+    </DockPanel>
+
+</Window>

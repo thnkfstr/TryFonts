@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+
+    <RootNamespace>TryFonts.App</RootNamespace>
+    <AssemblyName>TryFonts</AssemblyName>
+
+    <!-- Avalonia XAML compiler requires BuiltInComInteropSupport on Windows -->
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+
+    <!-- Windows DPI manifest -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- Windows application icon -->
+    <ApplicationIcon>Assets\TryFonts.ico</ApplicationIcon>
+
+    <Authors>Ben Adams</Authors>
+    <Copyright>Copyright (c) Ben Adams</Copyright>
+    <Product>Try Fonts</Product>
+    <Description>Preview text in any installed font. Offline, no tracking.</Description>
+    <PackageProjectUrl>https://github.com/ben-adams1/TryFonts</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Avalonia core -->
+    <PackageReference Include="Avalonia" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
+
+    <!-- MVVM source generators -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+
+    <!-- SkiaSharp for cross-platform font enumeration.
+         SkiaSharp is a transitive dependency of Avalonia; we reference it explicitly
+         to call SKFontManager directly. -->
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TryFonts.Core\TryFonts.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- AXAML files must be AvaloniaResource so the XAML compiler processes them -->
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+</Project>
