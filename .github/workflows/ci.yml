@@ -1,93 +1,41 @@
-name: CI
+name: Baseline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
 
 permissions:
   contents: read
 
+concurrency:
+  group: baseline-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  CORE_TEST_PROJECT: tests/TryFonts.Core.Tests/TryFonts.Core.Tests.csproj
+
 jobs:
-  # ── Build and test on Windows ────────────────────────────────────────────────
-  build-windows:
-    name: Build & Test (Windows)
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore TryFonts.sln
-
-      - name: Build
-        run: dotnet build TryFonts.sln --no-restore --configuration Release
-
-      - name: Run tests
-        run: >
-          dotnet test TryFonts.sln
-          --no-build
-          --configuration Release
-          --logger "trx;LogFileName=results.trx"
-          --collect:"XPlat Code Coverage"
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-windows
-          path: "**/TestResults/**"
-
-  # ── Build and test on macOS ──────────────────────────────────────────────────
-  build-macos:
-    name: Build & Test (macOS)
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore TryFonts.sln
-
-      - name: Build
-        run: dotnet build TryFonts.sln --no-restore --configuration Release
-
-      - name: Run tests
-        run: >
-          dotnet test TryFonts.sln
-          --no-build
-          --configuration Release
-          --logger "trx;LogFileName=results.trx"
-          --collect:"XPlat Code Coverage"
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-macos
-          path: "**/TestResults/**"
-
-  # ── Format / analyzer check ─────────────────────────────────────────────────
-  format-check:
-    name: Format Check
+  core-tests:
+    name: Core Build & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
-
-      - name: Check formatting
-        run: dotnet format TryFonts.sln --verify-no-changes --no-restore
-        continue-on-error: true   # warn, don't block, until format baseline is set
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Restore core tests
+        run: dotnet restore ${{ env.CORE_TEST_PROJECT }}
+      - name: Build core tests
+        run: >
+          dotnet build ${{ env.CORE_TEST_PROJECT }}
+          --no-restore
+          --configuration Release
+      - name: Run core tests
+        run: >
+          dotnet test ${{ env.CORE_TEST_PROJECT }}
+          --no-build
+          --configuration Release

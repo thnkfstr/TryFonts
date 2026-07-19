@@ -1,0 +1,112 @@
+name: Platform Compatibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/platform.yml"
+      - "TryFonts.sln"
+      - "src/**"
+      - "tests/**"
+      - "tools/**"
+      - "global.json"
+      - "Directory.*"
+      - "NuGet.config"
+  pull_request:
+    paths:
+      - ".github/workflows/platform.yml"
+      - "TryFonts.sln"
+      - "src/**"
+      - "tests/**"
+      - "tools/**"
+      - "global.json"
+      - "Directory.*"
+      - "NuGet.config"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "10.0.x"
+
+jobs:
+  build-windows:
+    name: Build & Test (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Restore dependencies
+        run: dotnet restore TryFonts.sln
+      - name: Build
+        run: dotnet build TryFonts.sln --no-restore --configuration Release
+      - name: Run tests
+        run: >
+          dotnet test TryFonts.sln
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=results.trx"
+          --collect:"XPlat Code Coverage"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-windows
+          path: "**/TestResults/**"
+          if-no-files-found: ignore
+          retention-days: 3
+
+  build-macos:
+    name: Build & Test (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Restore dependencies
+        run: dotnet restore TryFonts.sln
+      - name: Build
+        run: dotnet build TryFonts.sln --no-restore --configuration Release
+      - name: Run tests
+        run: >
+          dotnet test TryFonts.sln
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=results.trx"
+          --collect:"XPlat Code Coverage"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-macos
+          path: "**/TestResults/**"
+          if-no-files-found: ignore
+          retention-days: 3
+
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Restore dependencies
+        run: dotnet restore TryFonts.sln
+      - name: Check formatting
+        run: dotnet format TryFonts.sln --verify-no-changes --no-restore
+        continue-on-error: true
