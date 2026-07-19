@@ -50,7 +50,7 @@ src/TryFonts.App/        Avalonia desktop UI
 tests/TryFonts.Core.Tests/  xunit tests; no UI, no SkiaSharp dependency
 legacy/                  Old WinForms code (reference only)
 tools/                   Build + packaging scripts
-.github/workflows/       CI (ci.yml) and release (release.yml) pipelines
+.github/workflows/       Baseline, platform compatibility, and release pipelines
 ```
 
 ## Architecture decisions
