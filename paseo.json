@@ -1,0 +1,16 @@
+{
+  "worktree": {
+    "setup": "dotnet restore TryFonts.sln"
+  },
+  "scripts": {
+    "build": {
+      "command": "dotnet build TryFonts.sln --configuration Release --no-restore"
+    },
+    "test": {
+      "command": "dotnet test TryFonts.sln --configuration Release --no-restore"
+    },
+    "format-check": {
+      "command": "dotnet format TryFonts.sln --verify-no-changes --no-restore"
+    }
+  }
+}
