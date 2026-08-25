@@ -22,10 +22,10 @@ jobs:
     name: Windows x64 EXE
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -71,7 +71,7 @@ jobs:
       #     Remove-Item cert.pfx
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TryFonts-windows-x64-${{ github.event.inputs.version }}
           path: publish/TryFonts-windows-x64-${{ github.event.inputs.version }}.exe
@@ -81,10 +81,10 @@ jobs:
     name: macOS arm64 DMG
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -132,7 +132,7 @@ jobs:
       #   run: tools/sign-notarize-macos.sh ...
 
       - name: Upload macOS arm64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TryFonts-macos-arm64-${{ github.event.inputs.version }}
           path: publish/TryFonts-macos-arm64-${{ github.event.inputs.version }}.dmg
@@ -142,10 +142,10 @@ jobs:
     name: macOS x64 DMG
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -184,7 +184,7 @@ jobs:
             publish/TryFonts-macos-x64-${{ github.event.inputs.version }}.dmg
 
       - name: Upload macOS x64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TryFonts-macos-x64-${{ github.event.inputs.version }}
           path: publish/TryFonts-macos-x64-${{ github.event.inputs.version }}.dmg
