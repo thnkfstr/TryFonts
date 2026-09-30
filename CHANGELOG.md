@@ -7,6 +7,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Discover and preview named font variants such as Arial Narrow and condensed fonts,
+  including their correct width and weight, instead of hiding them under a broader family name.
+
 ### Added
 
 - **Full rebuild in C# + Avalonia UI** targeting Windows and macOS from a single codebase.
