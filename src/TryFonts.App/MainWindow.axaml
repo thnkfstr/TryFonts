@@ -210,20 +210,32 @@
                                 Grid.Column="0"
                                 Text="{Binding DataContext.PreviewText,
                                        RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                FontFamily="{Binding FamilyName,
+                                FontFamily="{Binding RenderFamilyName,
                                             Converter={StaticResource StringToFontFamilyConverter}}"
                                 FontSize="{Binding DataContext.FontSize,
                                           RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                FontWeight="{Binding DataContext.IsBold,
-                                            RelativeSource={RelativeSource AncestorType=ListBox},
-                                            Converter={StaticResource BoolToFontWeightConverter}}"
-                                FontStyle="{Binding DataContext.IsItalic,
-                                           RelativeSource={RelativeSource AncestorType=ListBox},
-                                           Converter={StaticResource BoolToFontStyleConverter}}"
                                 TextWrapping="Wrap"
                                 VerticalAlignment="Top"
                                 Margin="0,0,16,0"
-                                AutomationProperties.Name="{Binding FamilyName}" />
+                                AutomationProperties.Name="{Binding FamilyName}">
+                                <TextBlock.FontWeight>
+                                    <MultiBinding Converter="{StaticResource FontPreviewConverter}" ConverterParameter="Weight">
+                                        <Binding />
+                                        <Binding Path="DataContext.IsBold" RelativeSource="{RelativeSource AncestorType=ListBox}" />
+                                    </MultiBinding>
+                                </TextBlock.FontWeight>
+                                <TextBlock.FontStyle>
+                                    <MultiBinding Converter="{StaticResource FontPreviewConverter}" ConverterParameter="Style">
+                                        <Binding />
+                                        <Binding Path="DataContext.IsItalic" RelativeSource="{RelativeSource AncestorType=ListBox}" />
+                                    </MultiBinding>
+                                </TextBlock.FontStyle>
+                                <TextBlock.FontStretch>
+                                    <MultiBinding Converter="{StaticResource FontPreviewConverter}" ConverterParameter="Stretch">
+                                        <Binding />
+                                    </MultiBinding>
+                                </TextBlock.FontStretch>
+                            </TextBlock>
 
                             <!-- Meta: family name + style indicators -->
                             <StackPanel Grid.Column="1"

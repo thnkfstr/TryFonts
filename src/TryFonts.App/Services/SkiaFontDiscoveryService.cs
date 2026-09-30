@@ -31,11 +31,9 @@ public sealed class SkiaFontDiscoveryService : IFontDiscoveryService
 
                 try
                 {
-                    var info = BuildFontFamilyInfo(name, manager);
-                    if (info is not null)
-                        result.Add(info);
+                    result.AddRange(BuildFontFamilyInfos(name, manager, cancellationToken));
                 }
-                catch
+                catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     // Skip fonts that cannot be inspected; keep going.
                 }
@@ -52,33 +50,29 @@ public sealed class SkiaFontDiscoveryService : IFontDiscoveryService
         }, cancellationToken);
     }
 
-    private static FontFamilyInfo? BuildFontFamilyInfo(string familyName, SKFontManager manager)
+    private static IReadOnlyList<FontFamilyInfo> BuildFontFamilyInfos(
+        string familyName, SKFontManager manager, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(familyName))
-            return null;
+            return [];
 
-        var styles = new HashSet<FontFaceStyle>();
-
-        // Check each style by matching and verifying the resolved family name matches.
-        // When SkiaSharp cannot find the requested style it returns a fallback from a
-        // different family, so the name check is the reliability gate.
-
-        bool Has(SKFontStyle skStyle)
+        // A system family can contain named width and weight variants (for example,
+        // Arial Narrow is a face of Arial). Matching only four normal-width styles
+        // loses those names and renders their previews at the wrong width.
+        using var styles = manager.GetFontStyles(familyName);
+        var faces = new List<FontFaceInfo>(styles.Count);
+        for (int i = 0; i < styles.Count; i++)
         {
-            using var typeface = manager.MatchFamily(familyName, skStyle);
-            return typeface is not null &&
-                   string.Equals(typeface.FamilyName, familyName, StringComparison.OrdinalIgnoreCase);
+            cancellationToken.ThrowIfCancellationRequested();
+            using var style = styles[i];
+            faces.Add(new FontFaceInfo(styles.GetStyleName(i), style.Weight, style.Width,
+                style.Slant != SKFontStyleSlant.Upright));
         }
 
-        if (Has(SKFontStyle.Normal))      styles.Add(FontFaceStyle.Regular);
-        if (Has(SKFontStyle.Bold))        styles.Add(FontFaceStyle.Bold);
-        if (Has(SKFontStyle.Italic))      styles.Add(FontFaceStyle.Italic);
-        if (Has(SKFontStyle.BoldItalic))  styles.Add(FontFaceStyle.BoldItalic);
+        // Keep families whose style metadata is unavailable (including symbol fonts).
+        if (faces.Count == 0)
+            return [new FontFamilyInfo(familyName, new HashSet<FontFaceStyle> { FontFaceStyle.Regular })];
 
-        // If no named styles resolved (can happen for some symbol fonts), treat as Regular.
-        if (styles.Count == 0)
-            styles.Add(FontFaceStyle.Regular);
-
-        return new FontFamilyInfo(familyName, styles);
+        return FontVariantBuilder.Build(familyName, faces);
     }
 }

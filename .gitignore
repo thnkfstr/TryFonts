@@ -1,4 +1,5 @@
 # Build output
+/TryFonts.exe
 bin/
 obj/
 out/

@@ -75,6 +75,11 @@ pwsh tools/build-windows.ps1
 bash tools/build-macos.sh
 ```
 
+The Windows build creates a self-contained `TryFonts.exe` in the repository root,
+plus a versioned copy in `publish/`. Point a local shortcut at the root executable.
+Build scripts use the application version from `TryFonts.App.csproj` unless you
+supply a version override. Generated executables are not tracked by Git.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full setup instructions.
 
 ---

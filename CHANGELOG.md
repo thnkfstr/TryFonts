@@ -7,6 +7,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Discover and preview named font variants such as Arial Narrow and condensed fonts,
+  including their correct width and weight, instead of hiding them under a broader family name.
+
+### Changed
+
+- Advance the application version to 1.0.1 and use it by default in local packaging scripts.
+- Windows packaging writes a self-contained `TryFonts.exe` at the repository root for
+  stable shortcuts, alongside the versioned artifact in `publish/`. The old tracked
+  root executable is replaced by this generated, Git-ignored build output.
+
 ### Added
 
 - **Full rebuild in C# + Avalonia UI** targeting Windows and macOS from a single codebase.

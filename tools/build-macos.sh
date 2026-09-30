@@ -2,18 +2,18 @@
 # build-macos.sh — Produces self-contained DMGs for macOS arm64 and x64.
 #
 # Usage: tools/build-macos.sh [version] [arch]
-#   version : version string (default: 0.1.0-local)
+#   version : version string (default: the version in TryFonts.App.csproj)
 #   arch    : arm64 | x64 | both (default: both)
 #
 # Requires: dotnet 8+, hdiutil (macOS built-in)
 
 set -euo pipefail
 
-VERSION="${1:-0.1.0-local}"
 ARCH="${2:-both}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT="$ROOT/src/TryFonts.App/TryFonts.App.csproj"
 SOLUTION="$ROOT/TryFonts.sln"
+VERSION="${1:-$(dotnet msbuild "$PROJECT" -getProperty:Version)}"
 
 build_arch() {
   local RID="$1"

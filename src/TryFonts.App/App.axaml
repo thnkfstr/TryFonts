@@ -10,6 +10,7 @@
 
     <Application.Resources>
         <ResourceDictionary>
+            <converters:FontPreviewConverter         x:Key="FontPreviewConverter" />
             <converters:BoolToFontWeightConverter    x:Key="BoolToFontWeightConverter" />
             <converters:BoolToFontStyleConverter     x:Key="BoolToFontStyleConverter" />
             <converters:StyleAvailabilityConverter   x:Key="StyleAvailabilityConverter" />
