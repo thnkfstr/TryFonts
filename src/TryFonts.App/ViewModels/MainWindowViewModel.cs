@@ -92,12 +92,12 @@ public partial class MainWindowViewModel : ObservableObject
 
         // Restore persisted settings — but never restore preview text
         var s = _settingsService.Load();
-        _fontSize      = s.FontSize;
-        _fontSizeText  = ((int)Math.Round(s.FontSize)).ToString();
-        _isBold        = s.IsBold;
-        _isItalic      = s.IsItalic;
-        _searchMode    = s.SearchMode;
-        _sortMode      = s.SortMode;
+        _fontSize = s.FontSize;
+        _fontSizeText = ((int)Math.Round(s.FontSize)).ToString();
+        _isBold = s.IsBold;
+        _isItalic = s.IsItalic;
+        _searchMode = s.SearchMode;
+        _sortMode = s.SortMode;
 
         // Show the base-sample preset as active on startup
         _selectedPreset = PreviewTextPresets.All[0];
@@ -176,7 +176,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    partial void OnIsBoldChanged(bool value)   => SaveSettings();
+    partial void OnIsBoldChanged(bool value) => SaveSettings();
     partial void OnIsItalicChanged(bool value) => SaveSettings();
 
     partial void OnSelectedPresetChanged(PreviewTextPreset? value)
@@ -203,7 +203,7 @@ public partial class MainWindowViewModel : ObservableObject
     private void ApplyFilterAndSort()
     {
         var filtered = FontFilter.Apply(_allFonts, SearchText, SearchMode);
-        var sorted   = FontSorter.Apply(filtered, SortMode.NameAZ);
+        var sorted = FontSorter.Apply(filtered, SortMode.NameAZ);
         FilteredFonts = sorted.ToList().AsReadOnly();
     }
 
@@ -222,23 +222,13 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void SaveSettings()
     {
-        _settingsService.Save(new AppSettings
-        {
-            FontSize   = FontSize,
-            IsBold     = IsBold,
-            IsItalic   = IsItalic,
-            SearchMode = SearchMode,
-            SortMode   = SortMode.NameAZ,
-        });
-    }
-
-    public void SaveWindowGeometry(double width, double height, double x, double y)
-    {
+        // Preserve saved geometry and other settings when preview controls change.
         var s = _settingsService.Load();
-        s.WindowWidth  = width;
-        s.WindowHeight = height;
-        s.WindowX      = x;
-        s.WindowY      = y;
+        s.FontSize = FontSize;
+        s.IsBold = IsBold;
+        s.IsItalic = IsItalic;
+        s.SearchMode = SearchMode;
+        s.SortMode = SortMode.NameAZ;
         _settingsService.Save(s);
     }
 }

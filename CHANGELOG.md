@@ -9,11 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Restore the last normal window size and maximized state, keep the entire window
+  inside the monitor's working area, and preserve saved geometry when preview settings change.
 - Discover and preview named font variants such as Arial Narrow and condensed fonts,
   including their correct width and weight, instead of hiding them under a broader family name.
 
 ### Changed
 
+- Advance the application version to 1.0.2 for the window persistence fix.
 - Advance the application version to 1.0.1 and use it by default in local packaging scripts.
 - Windows packaging writes a self-contained `TryFonts.exe` at the repository root for
   stable shortcuts, alongside the versioned artifact in `publish/`. The old tracked

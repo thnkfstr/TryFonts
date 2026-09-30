@@ -52,6 +52,12 @@ public sealed class SettingsTests
         Assert.True(double.IsNaN(s.WindowY));
     }
 
+    [Fact]
+    public void Defaults_WindowIsNotMaximized()
+    {
+        Assert.False(new AppSettings().WindowMaximized);
+    }
+
     // ── Mutation ──────────────────────────────────────────────────────────────
 
     [Fact]
@@ -59,18 +65,18 @@ public sealed class SettingsTests
     {
         var s = new AppSettings
         {
-            FontSize   = 36,
-            IsBold     = true,
-            IsItalic   = true,
+            FontSize = 36,
+            IsBold = true,
+            IsItalic = true,
             SearchMode = SearchMode.StartsWith,
-            SortMode   = SortMode.NameZA,
+            SortMode = SortMode.NameZA,
         };
 
-        Assert.Equal(36,                 s.FontSize);
+        Assert.Equal(36, s.FontSize);
         Assert.True(s.IsBold);
         Assert.True(s.IsItalic);
         Assert.Equal(SearchMode.StartsWith, s.SearchMode);
-        Assert.Equal(SortMode.NameZA,       s.SortMode);
+        Assert.Equal(SortMode.NameZA, s.SortMode);
     }
 
     // ── No PreviewText field ──────────────────────────────────────────────────
