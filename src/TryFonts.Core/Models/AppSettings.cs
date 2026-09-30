@@ -20,6 +20,7 @@ public sealed class AppSettings
     public double WindowHeight { get; set; } = 800;
     public double WindowX { get; set; } = double.NaN;
     public double WindowY { get; set; } = double.NaN;
+    public bool WindowMaximized { get; set; } = false;
 
     // Schema version for future migrations
     public int SchemaVersion { get; set; } = 1;
